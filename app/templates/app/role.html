@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Role - Smart CrackEye</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Same CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<!-- ✅ Enable scrolling + role styling -->
+<body class="role-page">
+    <!-- 🔥 Running AI Banner -->
+     <div class="top-banner">
+        <div class="banner-track">
+            <span>Smart CrackEye is the Future | SYSTEM LOGIN: SUCCESSFUL | GLOBAL INFRASTRUCTURE MONITOR ACTIVE</span>
+        </div>
+    </div>
+
+    <!-- ✅ Background Canvas (Neural Network) -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Main Content -->
+    <main class="content-container">
+
+        <h1 class="main-title">SELECT YOUR ROLE</h1>
+        <p class="subtitle">Choose how you want to use CrackEye</p>
+
+        <div class="role-container">
+
+            <!-- Authority -->
+            <div class="role-card" onclick="goToAuthority()">
+                <h2>As Authority</h2>
+                <p>Monitor infrastructure, analyze reports, and manage repairs</p>
+            </div>
+
+            <!-- Citizen -->
+            <div class="role-card" onclick="goToCitizen()">
+                <h2>As Citizen</h2>
+                <p>Report cracks and help improve public safety</p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- ✅ Navigation Functions -->
+    <script>
+        function goToAuthority() {
+            document.body.style.opacity = "0";
+            setTimeout(() => {
+                window.location.href = "{% url 'login' %}";
+            }, 300);
+        }
+
+        function goToCitizen() {
+            document.body.style.opacity = "0";
+            setTimeout(() => {
+                window.location.href = "{% url 'public3' %}";
+            }, 300);
+        }
+    </script>
+
+    <!-- ✅ IMPORTANT: Load main script ONCE -->
+      <script src="{% static 'js/script.js' %}"></script>
+
+
+</body>
+</html>

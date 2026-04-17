@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AI Scan Report - Smart CrackEye</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Poppins:wght@300;400;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        body.role-page {
+            display: block;
+            overflow: auto;
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+
+        .report-container {
+            position: relative;
+            z-index: 10;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .report-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- Global Panel Styles --- */
+        .panel {
+            background: rgba(0, 26, 40, 0.45);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--accent-blue);
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.15);
+            padding-bottom: 15px;
+        }
+
+        .panel-header::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background: var(--accent-blue);
+            box-shadow: 0 0 10px var(--accent-blue);
+        }
+
+        /* --- Visual Section --- */
+        .visual-panel {
+            grid-column: 1;
+        }
+
+        .image-container {
+            width: 100%;
+            height: 350px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            overflow: hidden;
+            position: relative;
+            background: #000;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+            filter: grayscale(0.3) contrast(1.1);
+        }
+
+        /* Scan Overlay Effect */
+        .scan-overlay {
+            position: absolute;
+            inset: 0;
+            border: 2px solid rgba(0, 243, 255, 0.5);
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--accent-blue);
+            box-shadow: 0 0 15px var(--accent-blue);
+            animation: scanMove 4s linear infinite;
+        }
+
+        @keyframes scanMove {
+            0% {
+                top: 0;
+            }
+
+            50% {
+                top: 100%;
+            }
+
+            100% {
+                top: 0;
+            }
+        }
+
+        
+
+        @keyframes pulse-target {
+            0% {
+                opacity: 0.4;
+                transform: scale(0.95);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+
+            100% {
+                opacity: 0.4;
+                transform: scale(0.95);
+            }
+        }
+
+        /* --- Data Section --- */
+        .data-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-label {
+            color: var(--text-sub);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-value {
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .highlight-value {
+            color: var(--accent-blue);
+            text-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        .danger-value {
+            color: #ff4d4d;
+            text-shadow: 0 0 8px rgba(255, 77, 77, 0.5);
+        }
+
+        /* --- Assessment Panel --- */
+        .assessment-panel {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .assessment-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        /* --- Action Button --- */
+        .action-footer {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-print {
+            padding: 15px 40px;
+            background: transparent;
+            border: 2px solid var(--accent-blue);
+            color: var(--accent-blue);
+            border-radius: 50px;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-print:hover {
+            background: var(--accent-blue);
+            color: #04020a;
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        /* HUD Overlays */
+        .corner-decor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--accent-blue);
+        }
+
+        .top-left {
+            top: 0;
+            left: 0;
+            border-right: 0;
+            border-bottom: 0;
+        }
+
+        .top-right {
+            top: 0;
+            right: 0;
+            border-left: 0;
+            border-bottom: 0;
+        }
+
+        .bottom-left {
+            bottom: 0;
+            left: 0;
+            border-right: 0;
+            border-top: 0;
+        }
+
+        .bottom-right {
+            bottom: 0;
+            right: 0;
+            border-left: 0;
+            border-top: 0;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .badge-critical {
+            background: rgba(255, 77, 77, 0.2);
+            color: #ff4d4d;
+            border: 1px solid #ff4d4d;
+        }
+    </style>
+</head>
+
+<body class="role-page">
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="top-banner">
+        <div class="banner-track">
+            <span><span style="color:#00ff00;">●</span> REPORT GENERATED | CRACKEYE AI SYSTEM | ENCRYPTED LINK SECURED |
+                ANALYZING STRUCTURAL INTEGRITY...</span>
+        </div>
+    </div>
+
+    <main class="report-container">
+
+        <!-- Result Visuals -->
+        <div class="panel visual-panel">
+            <div class="corner-decor top-left"></div>
+            <div class="corner-decor top-right"></div>
+            <div class="panel-header">SCAN TELEMETRY</div>
+            <div class="image-container">
+                <img src="{% static 'processimage/overlay.jpg' %}"
+                    alt="Crack Analysis">
+                <div class="scan-overlay">
+                    <div class="scan-line"></div>
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <div class="info-item">
+                    <span class="info-label">ANALYSIS CONFIDENCE</span>
+                    <div
+                        style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 5px; overflow: hidden;">
+                        <div
+                            style="width: {{data.damage.confidence}}%; height: 100%; background: var(--accent-blue); box-shadow: 0 0 10px var(--accent-blue);">
+                        </div>
+                    </div>
+                    <span class="info-value highlight-value" style="margin-top: 5px;">{{data.damage.confidence}}% Accurate</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Metrics -->
+        <div class="panel data-panel">
+            <div class="corner-decor top-right"></div>
+            <div class="panel-header">ANALYTICAL METRICS</div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">GEO-LOCATION</span>
+                    <span class="info-value">{{data.location.area}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">COORDINATES</span>
+                    <span class="info-value" style="font-size: 0.9rem;">
+                        Lat: {{ data.location.latitude }} | Lon: {{ data.location.longitude }}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">AREA / ZONE</span>
+                    <span class="info-value">{{data.location.zone}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">DAMAGE TYPE</span>
+                    <span class="info-value danger-value">{{data.damage.type}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">CATEGORY</span>
+                    <span class="info-value">{{data.damage.category}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">CRACK DETAILS</span>
+                    <span class="info-value">Area Mask : {{data.geometry.mask_area}}</span>
+                    <span class="info-value">BBox Area : {{data.geometry.bbox_area}}</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <div class="info-item" style="margin-bottom: 15px;">
+                    <span class="info-label">NEURAL ASSESSMENT SUMMARY</span>
+                    <p style="color: var(--text-sub); font-size: 0.85rem; line-height: 1.6;">{{ai_sujjection}}</p>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <span class="badge badge-critical">CRITICAL ALERT</span>
+                    <span class="badge"
+                        style="background: rgba(0, 243, 255, 0.1); color: var(--accent-blue); border: 1px solid var(--accent-blue);">PUBLIC
+                        SAFETY RISK</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk & Action -->
+        <div class="panel assessment-panel">
+            <div class="stat-card">
+                <p class="label">RISK SCORE</p>
+                <p class="value danger-value">{{data.risk_assessment.risk_score}}</p>
+            </div>
+            <div class="stat-card">
+                <p class="label">PRIORITY LEVEL</p>
+                <p class="value" style="color: #ff9f1c;">{{data.risk_assessment.priority}}</p>
+            </div>
+            
+            <div class="stat-card">
+                <p class="label">REPAIR ACTION</p>
+                <p class="value" style="font-size: 1rem;">{{data.recommended_action.action}}</p>
+            </div>
+        
+            <div class="stat-card">
+                <p class="label">STATUS</p>
+                <p class="value highlight-value" style="font-size: 1rem;">{{data.status}}</p>
+            </div>
+            <div class="stat-card">
+                <p class="label">Material Required</p>
+                <p class="value highlight-value" style="font-size: 1rem;">{{data.recommended_action.material}}</p>
+            </div>
+            <div class="stat-card">
+                <p class="label">Action Required</p>
+                <p class="value highlight-value" style="font-size: 1rem;">{{data.recommended_action.method}}</p>
+            </div>
+            
+            <div class="stat-card">
+                <p class="label">Material Est. Cost</p>
+                <p class="value highlight-value" style="font-size: 1rem;">₹{{data.recommended_action.estimated_cost}}</p>
+            </div>
+            <div class="stat-card">
+                <p class="label">Est. Repair Time</p>
+                <p class="value highlight-value" style="font-size: 1rem;">{{data.recommended_action.estimated_time_hours}} hrs</p>
+            </div>
+            {% if data.damage.type == "pothole" %}
+                <div class="stat-card">
+                    <p class="label">Traffic Impact</p>
+                    <p class="value highlight-value" style="font-size: 1rem;">
+                        {{data.risk_assessment.traffic_impact}}
+                    </p>
+                </div>
+            {% endif %}
+            {% if data.damage.type == "stain" %}
+                <div class="stat-card">
+                    <p class="label">CLEAN</p>
+                    <p class="value highlight-value" style="font-size: 1rem;">
+                        the STAIN
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="action-footer">
+            <a href="/public3/" class="btn-print"
+                style="margin-right: 20px; border-color: var(--text-sub); color: var(--text-sub);">NEW SCAN</a>
+                <button class="btn-print" onclick="downloadPDF({{report_id}})">
+                    DOWNLOAD REPORT PDF
+                </button>
+        </div>
+    </main>
+    <script src="{% static 'js/script.js' %}"></script>
+    <script>
+        function downloadPDF(id) {
+            window.location.href = `/static/reports/report_${id}.pdf`;
+        }
+        </script>
+</body>
+</html>

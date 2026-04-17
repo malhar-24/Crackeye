@@ -1,0 +1,401 @@
+/* --- Variables & Theming --- */
+:root {
+    --bg-color-start: #04020a;
+    /* Almost Black */
+    --bg-color-end: #0f0724;
+    /* Deep Deep Purple */
+    --accent-blue: #00f3ff;
+    --accent-glow: rgba(0, 243, 255, 0.5);
+    --accent-purple: #8a2be2;
+    --text-main: #ffffff;
+    --text-sub: #b3bcf5;
+}
+
+/* --- Base Reset & Globals --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, var(--bg-color-start) 20%, var(--bg-color-end) 100%);
+    color: var(--text-main);
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+    /* Restrict scrolling for landing canvas */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* --- Layout Elements --- */
+
+/* Flash Overlay */
+#flash-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: #ffffff;
+    z-index: 9999;
+    opacity: 1;
+    pointer-events: none;
+}
+
+/* AI Neural Network Style Background */
+#bg-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* Main Content Wrapper */
+.content-container {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* --- Typography Options --- */
+
+.main-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 800;
+    letter-spacing: 3px;
+    line-height: 1.2;
+
+    /* Futuristic pure white to cyan metallic look */
+    background: linear-gradient(180deg, #ffffff 0%, var(--accent-blue) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0px 4px 30px rgba(0, 243, 255, 0.4);
+
+    /* Pre-animation states */
+    opacity: 0;
+    transform: scale(0.85);
+}
+
+.subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 300;
+    color: var(--text-sub);
+    letter-spacing: 1.5px;
+    max-width: 600px;
+
+    /* Pre-animation states */
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+/* --- Interactive Elements --- */
+
+.cta-button {
+    position: relative;
+    margin-top: 2rem;
+    padding: 1.2rem 3.5rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent-blue);
+    background: rgba(0, 26, 40, 0.4);
+    backdrop-filter: blur(5px);
+    border: 2px solid var(--accent-blue);
+    border-radius: 50px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 0 15px var(--accent-glow), inset 0 0 10px var(--accent-glow);
+
+    /* Pre-animation states */
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    /* Disabled until animated */
+}
+
+.cta-button .btn-text {
+    position: relative;
+    z-index: 2;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* Hover effect */
+.cta-button:hover {
+    color: var(--bg-color-start);
+    background: var(--accent-blue);
+    box-shadow: 0 0 35px var(--accent-blue), 0 0 60px var(--accent-blue);
+    transform: scale(1.08);
+    /* Scale and glow increase */
+}
+
+/* Ripple Element Styles */
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple-anim 600ms linear;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 1;
+    pointer-events: none;
+}
+
+@keyframes ripple-anim {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* --- Page Load Animations Flow --- */
+
+/* 1. Blink (Flash Effect) */
+.loaded #flash-overlay {
+    animation: flash-anim 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes flash-anim {
+    0% {
+        opacity: 1;
+    }
+
+    30% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        display: none;
+    }
+}
+
+/* 2. Title fade-in + slight zoom */
+.loaded .main-title {
+    animation: reveal-title 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.6s forwards;
+}
+
+@keyframes reveal-title {
+    0% {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 3. Subtitle simple fade-up */
+.loaded .subtitle {
+    animation: fade-up 1s ease 1.2s forwards;
+}
+
+@keyframes fade-up {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 4. Button delay display */
+.loaded .cta-button {
+    animation: fade-up-btn 1s ease 1.8s forwards;
+}
+
+@keyframes fade-up-btn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+        /* Enable clicking */
+    }
+}
+
+/* Cleanup class for the button so :hover scale doesn't fight with keyframe transform */
+.cta-button.animation-complete {
+    opacity: 1;
+    transform: none;
+}
+
+.cta-button.animation-complete:hover {
+    transform: scale(1.08);
+}
+
+/* ================= ROLE PAGE STYLES ================= */
+
+/* Allow scrolling on next pages */
+body.role-page {
+    overflow: auto;
+}
+
+body.role-page #bg-canvas {
+    opacity: 0.5;
+    /* better visibility for cards */
+}
+
+/* Role container layout */
+.role-container {
+    display: flex;
+    gap: 40px;
+    margin-top: 50px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Role card design */
+.role-card {
+    width: 280px;
+    padding: 30px;
+    border-radius: 20px;
+    background: rgba(0, 26, 40, 0.35);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+
+    transition: all 0.4s ease;
+}
+
+/* Glow border animation */
+.role-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 1px;
+    background: linear-gradient(120deg, transparent, var(--accent-blue), transparent);
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: source-out;
+    mask-composite: subtract;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+/* Hover effects */
+.role-card:hover {
+    transform: translateY(-12px) scale(1.05);
+    box-shadow: 0 0 30px var(--accent-glow), 0 0 60px rgba(0, 243, 255, 0.2);
+}
+
+.role-card:hover::before {
+    opacity: 1;
+}
+
+/* Title */
+.role-card h2 {
+    font-family: 'Orbitron', sans-serif;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+
+    background: linear-gradient(180deg, #ffffff 0%, var(--accent-blue) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Description */
+.role-card p {
+    font-size: 0.95rem;
+    color: var(--text-sub);
+    line-height: 1.5;
+}
+
+/* Subtle pulse animation */
+@keyframes pulseGlow {
+    0% {
+        box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    50% {
+        box-shadow: 0 0 25px var(--accent-glow);
+    }
+
+    100% {
+        box-shadow: 0 0 10px var(--accent-glow);
+    }
+}
+
+.role-card {
+    animation: pulseGlow 3s infinite ease-in-out;
+}
+
+/* ================= PAGE TRANSITION ================= */
+
+body {
+    transition: opacity 0.3s ease;
+}
+
+/* ================= RUNNING TOP BANNER ================= */
+
+.top-banner {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 40px;
+    overflow: hidden;
+    z-index: 20;
+
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+}
+
+/* Moving text container */
+.banner-track {
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    animation: scrollText 12s linear infinite;
+}
+
+/* Text styling */
+.banner-track span {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    color: var(--accent-blue);
+
+    text-shadow: 0 0 10px var(--accent-glow),
+        0 0 20px var(--accent-glow);
+}
+
+/* Animation */
+@keyframes scrollText {
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Citizen Portal - Smart CrackEye</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% csrf_token %}
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  
+
+  {% load static %}
+
+  <!-- Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Poppins:wght@300;400;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <style>
+    /* --- Themed Overrides for Citizen Portal --- */
+    body.role-page {
+      display: block;
+      overflow: auto;
+      padding-top: 50px;
+    }
+
+    .citizen-container {
+      position: relative;
+      z-index: 10;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 30px;
+    }
+
+    /* HUD Decorations */
+    .hero-panel {
+      position: relative;
+      grid-column: 1 / -1;
+      background: rgba(0, 26, 40, 0.45);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(0, 243, 255, 0.3);
+      border-radius: 25px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .hero-panel::before,
+    .hero-panel::after {
+      content: "";
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--accent-blue);
+    }
+
+    .hero-panel::before {
+      top: 0;
+      left: 0;
+      border-right: none;
+      border-bottom: none;
+      border-radius: 25px 0 0 0;
+    }
+
+    .hero-panel::after {
+      bottom: 0;
+      right: 0;
+      border-left: none;
+      border-top: none;
+      border-radius: 0 0 25px 0;
+    }
+
+    .hero-panel h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.2rem;
+      color: white;
+      margin-bottom: 15px;
+      letter-spacing: 3px;
+      text-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .hero-panel .subtitle {
+      margin: 0 auto;
+      max-width: 600px;
+      opacity: 0.8;
+    }
+
+    .upload-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      overflow: hidden;
+      border-radius: 15px;
+    }
+
+    .file-input-label {
+      display: block;
+      padding: 50px;
+      border: 2px dashed rgba(0, 243, 255, 0.4);
+      border-radius: 15px;
+      cursor: pointer;
+      color: var(--text-sub);
+      transition: all 0.3s;
+      background: rgba(0, 243, 255, 0.02);
+      position: relative;
+    }
+
+    /* Laser Scan Animation */
+    .scan-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--accent-blue);
+      box-shadow: 0 0 15px var(--accent-blue);
+      z-index: 5;
+      animation: scanAnim 3s linear infinite;
+      opacity: 0.6;
+    }
+
+    @keyframes scanAnim {
+      0% {
+        top: 0;
+      }
+
+      100% {
+        top: 100%;
+      }
+    }
+
+    .file-input-label:hover {
+      background: rgba(0, 243, 255, 0.08);
+      border-color: var(--accent-blue);
+      color: white;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 15px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .input-group input {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(0, 243, 255, 0.2);
+      padding: 14px 20px;
+      border-radius: 10px;
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      flex: 1;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .input-group input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .panel {
+      position: relative;
+      background: rgba(0, 26, 40, 0.4);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 243, 255, 0.15);
+      border-radius: 20px;
+      padding: 25px;
+      transition: border-color 0.3s;
+    }
+
+    .panel:hover {
+      border-color: rgba(0, 243, 255, 0.4);
+    }
+
+    .panel-header {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--accent-blue);
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-header::before {
+      content: "";
+      width: 4px;
+      height: 18px;
+      background: var(--accent-blue);
+      box-shadow: 0 0 8px var(--accent-blue);
+    }
+
+    .result-terminal {
+      background: rgba(0, 4, 10, 0.8);
+      border: 1px solid var(--accent-blue);
+      padding: 25px;
+      border-radius: 12px;
+      margin-top: 25px;
+      font-family: 'Poppins', sans-serif;
+      text-align: left;
+      display: none;
+      position: relative;
+      box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.05);
+    }
+
+    .result-terminal::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0, 243, 255, 0.03) 2px);
+      pointer-events: none;
+    }
+
+    .analyze-btn {
+      margin-top: 20px;
+      padding: 18px 50px;
+      font-family: 'Orbitron', sans-serif;
+      background: transparent;
+      border: 2px solid var(--accent-blue);
+      color: var(--accent-blue);
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 800;
+      letter-spacing: 2px;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: pulseBtn 3s infinite;
+    }
+
+    @keyframes pulseBtn {
+      0% {
+        box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+      }
+
+      50% {
+        box-shadow: 0 0 25px rgba(0, 243, 255, 0.5);
+      }
+
+      100% {
+        box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+      }
+    }
+
+    .analyze-btn:hover {
+      background: var(--accent-blue);
+      color: #04020a;
+      box-shadow: 0 0 40px var(--accent-blue);
+      transform: scale(1.05);
+    }
+
+    #map {
+      height: 300px;
+      border-radius: 15px;
+      border: 1px solid rgba(0, 243, 255, 0.2);
+      filter: hue-rotate(180deg) invert(0.9) brightness(0.8) contrast(1.2);
+      /* Darker map feel */
+    }
+
+    .stat-item {
+      margin-bottom: 15px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .stat-label {
+      color: var(--text-sub);
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+    }
+
+    .stat-value {
+      color: white;
+      font-weight: 600;
+      font-size: 1.2rem;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    /* Navigation Bar */
+    .nav-bar {
+      position: relative;
+      z-index: 10;
+      max-width: 1200px;
+      margin: 10px auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .nav-btn {
+      padding: 10px 25px;
+      background: rgba(0, 243, 255, 0.1);
+      border: 1px solid var(--accent-blue);
+      border-radius: 8px;
+      color: var(--accent-blue);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn:hover {
+      background: var(--accent-blue);
+      color: #04020a;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    /* Live Status Dot */
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #00ff00;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+      box-shadow: 0 0 8px #00ff00;
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0% {
+        opacity: 0.4;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0.4;
+      }
+    }
+  </style>
+  <style>
+    .file-input-label {
+      display: block;
+      padding: 40px;
+      border: 2px dashed #00f3ff;
+      border-radius: 15px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(0, 243, 255, 0.05);
+      transition: 0.3s;
+    }
+    
+    .file-input-label:hover {
+      background: rgba(0, 243, 255, 0.1);
+    }
+    
+    #preview {
+      margin-top: 15px;
+      border: 2px solid #00f3ff;
+    }
+    </style>
+</head>
+
+<body class="role-page">
+  <!-- AI Neural Network Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="top-banner">
+    <div class="banner-track">
+      <span><span class="status-dot"></span>SYSTEM STATUS: OPTIMAL | CITIZEN REPORTING PORTAL ENABLED | SMART CRACKEYE
+        AI v2.4.0 ACTIVE</span>
+    </div>
+  </div>
+
+  <nav class="nav-bar">
+    <a href="/myreports/" class="nav-btn">
+        <span>📋</span> MY REPORTS
+    </a>
+  </nav>
+
+  <main class="citizen-container">
+
+    <!-- Hero: Reporting Tool -->
+    <div class="hero-panel">
+      <h2>REPORT DAMAGE</h2>
+      <p class="subtitle">
+        Upload high-resolution photography to initiate structural integrity analysis via CrackEye Neural Engine.
+      </p>
+    
+      <div class="upload-box">
+    
+        <!-- Upload -->
+        <div class="file-input-wrapper">
+          <div class="scan-line"></div>
+    
+          <input type="file" id="fileUpload" style="display: none;">
+    
+          <label for="fileUpload" class="file-input-label" id="uploadLabel">
+            <div id="uploadContent">
+              <div style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5;">📁</div>
+              Click to upload telemetry or drag & drop files
+            </div>
+          </label>
+        </div>
+    
+        <!-- IMAGE PREVIEW (NEW but non-breaking) -->
+        <img id="preview"
+             style="max-width: 220px; display: none; border-radius: 10px; border: 1px solid #00f3ff;" />
+    
+        <!-- Inputs (UNCHANGED) -->
+        <div class="input-group">
+          <input type="text" id="locationInput" placeholder="GEO-LOCATION DATA (e.g. 19.0760, 72.8777)">
+          <input type="text" id="distanceInput" placeholder="OFFSET DISTANCE (meters)">
+        </div>
+    
+        <!-- Button (UNCHANGED) -->
+        <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">
+          INITIATE AI SCAN
+        </button>
+    
+        <!-- Result (UNCHANGED) -->
+        <div id="result" class="result-terminal"></div>
+    
+      </div>
+    </div>
+
+    <!-- Map Panel -->
+    <div class="panel">
+      <div class="panel-header">REAL-TIME SURVEILLANCE MAP</div>
+      <div id="map"></div>
+    </div>
+
+    <!-- Sidebar Panels -->
+    <div class="side-panel" style="display: flex; flex-direction: column; gap: 20px;">
+      <div class="panel">
+        <div class="panel-header">NEURAL INSIGHTS</div>
+        <div class="stat-item">
+          <p class="stat-label">TOTAL PROCESSED</p>
+          <p class="stat-value">1,402</p>
+        </div>
+        <div class="stat-item">
+          <p class="stat-label">AI CONFIDENCE</p>
+          <p class="stat-value">98.4%</p>
+        </div>
+        <div class="stat-item">
+          <p class="stat-label">AVG COST EST.</p>
+          <p class="stat-value">₹45,500</p>
+        </div>
+      </div>
+
+      <div class="panel" style="border-color: rgba(255, 77, 77, 0.4); background: rgba(255, 0, 0, 0.05);">
+        <div class="panel-header" style="color: #ff4d4d;">PRIORITY ALERTS</div>
+        <div style="display:flex; gap:10px; align-items:start;">
+          <span style="font-size: 1.2rem;">🚨</span>
+          <p style="color: white; font-size: 0.85rem; line-height: 1.4;">Critical structural failure detected at Bridge
+            Sector 12. Immediate intervention recommended.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const locationInput = document.getElementById("locationInput");
+    
+        if (!locationInput) return;
+    
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude.toFixed(6);
+                    const lon = position.coords.longitude.toFixed(6);
+                    locationInput.value = `${lat}, ${lon}`;
+                },
+                () => {
+                    locationInput.placeholder = "Location access denied";
+                }
+            );
+        } else {
+            locationInput.placeholder = "Geolocation not supported";
+        }
+    });
+    
+    async function analyze() {
+        const resultDiv = document.getElementById("result");
+        const location = document.getElementById("locationInput").value;
+        const distance = document.getElementById("distanceInput").value; // ✅ FIXED
+        const fileInput = document.getElementById("fileUpload");
+        const btn = document.getElementById("analyzeBtn");
+    
+        if (!location) {
+            alert("Please enter geo-location data");
+            return;
+        }
+    
+        if (fileInput.files.length === 0) {
+            alert("Please upload an image");
+            return;
+        }
+    
+        const file = fileInput.files[0];
+    
+        btn.disabled = true;
+        btn.innerText = "UPLOADING...";
+    
+        resultDiv.style.display = "block";
+        resultDiv.innerHTML = "<p style='color: var(--accent-blue)'>Uploading image...</p>";
+    
+        const formData = new FormData();
+        formData.append("image", file);
+        formData.append("location", location);
+        formData.append("distance", distance);
+    
+        // ✅ Proper CSRF token
+        const csrftoken = getCookie('csrftoken');
+    
+        await fetch("/upload/", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": csrftoken
+            }
+        });
+    
+        const stages = [
+            "ESTABLISHING SAT-LINK...",
+            "RUNNING AI MODEL...",
+            "FINALIZING REPORT..."
+        ];
+    
+        for (const text of stages) {
+            resultDiv.innerHTML = `<p style="color: var(--accent-blue)">[SYSTEM] ${text}</p>`;
+            await new Promise(r => setTimeout(r, 800));
+        }
+    
+        // ✅ Redirect with params
+        window.location.href = `/report/?location=${encodeURIComponent(location)}&distance=${distance}`;
+    }
+    
+    // ✅ Django CSRF helper
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    </script>
+
+  <!-- IMPORTANT: Load main script for background animation -->
+  <script src="{% static 'js/script.js' %}"></script>
+  <script>
+    const fileInput = document.getElementById("fileUpload");
+    const uploadContent = document.getElementById("uploadContent");
+    const preview = document.getElementById("preview");
+    const uploadLabel = document.getElementById("uploadLabel");
+    
+    fileInput.addEventListener("change", function () {
+        const file = fileInput.files[0];
+    
+        if (file) {
+            // Change UI text
+            uploadContent.innerHTML = `
+                <div style="font-size: 2rem;">✅</div>
+                <div style="color: white; font-size: 0.9rem;">
+                    Uploaded: ${file.name}
+                </div>
+            `;
+    
+            // Add glow effect
+            uploadLabel.classList.add("uploaded");
+    
+            // Show preview
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = "block";
+        }
+    });
+    </script>
+
+</body>
+
+</html>

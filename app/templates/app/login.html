@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authority Login - Smart CrackEye</title>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Poppins:wght@300;400;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Same CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        .login-container {
+            width: 320px;
+            padding: 40px 30px;
+            border-radius: 20px;
+            background: rgba(0, 26, 40, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            text-align: center;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            margin-top: 10px;
+        }
+
+        .login-container h2 {
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            background: linear-gradient(180deg, #ffffff 0%, var(--accent-blue) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            background: rgba(0, 10, 20, 0.6);
+            border: 1px solid var(--accent-blue);
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            box-shadow: 0 0 10px var(--accent-glow);
+            border-color: #fff;
+        }
+
+        .error-msg {
+            color: #ff4a4a;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            min-height: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            text-shadow: 0 0 5px rgba(255, 74, 74, 0.5);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--bg-color-start);
+            background: var(--accent-blue);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .login-btn:hover {
+            box-shadow: 0 0 25px var(--accent-blue);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body class="role-page">
+    <!-- Running AI Banner -->
+    <div class="top-banner">
+        <div class="banner-track">
+            <span>Smart CrackEye is the Future | SYSTEM LOGIN: REQUIRED | GLOBAL INFRASTRUCTURE MONITOR PENDING</span>
+        </div>
+    </div>
+
+    <!-- Background Canvas (Neural Network) -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Main Content -->
+    <main class="content-container">
+
+        <h1 class="main-title">AUTHORITY LOGIN</h1>
+        <p class="subtitle">Secure access for officials</p>
+
+        <div class="login-container">
+            <h2>Sign In</h2>
+            <div class="input-group">
+                <label for="userid">Officer ID</label>
+                <input type="text" id="userid" placeholder="Enter ID">
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter Password">
+            </div>
+
+            <div id="error-msg" class="error-msg">Invalid Credentials</div>
+
+            <button class="login-btn" onclick="authenticate()">LOGIN</button>
+        </div>
+
+    </main>
+
+    <!-- Navigation Functions -->
+    <script>
+        // Let's add a small guide for development
+        console.log("Valid Credentials: \nID: officer1 | Pass: pass123 \nID: admin1 | Pass: admin123");
+
+        function authenticate() {
+            const uid = document.getElementById("userid").value.trim();
+            const pass = document.getElementById("password").value.trim();
+            const errorMsg = document.getElementById("error-msg");
+
+            // Simple logic for 2 IDs without database
+            if ((uid === "officer1" && pass === "pass123") ||
+                (uid === "admin1" && pass === "admin123")) {
+
+                document.body.style.opacity = "0";
+                setTimeout(() => {
+                    window.location.href = "{%url 'officer' %}";
+                }, 300);
+            } else {
+                errorMsg.style.opacity = "1";
+                errorMsg.innerText = "Invalid ID or Password.";
+                setTimeout(() => {
+                    errorMsg.style.opacity = "0";
+                }, 3000);
+            }
+        }
+    </script>
+
+    <script src="{% static 'js/script.js' %}"></script>
+
+</body>
+
+</html>

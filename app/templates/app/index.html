@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart CrackEye System</title>
+    <!-- Modern Sans-Serif Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Poppins:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        /* Logo Background Styles */
+        .logo-bg {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80vw;
+            max-width: 600px;
+            opacity: 0.15;
+            z-index: 2;
+            pointer-events: none;
+            filter: blur(2px) brightness(1.2);
+            /* Fallback if image missing: don't show broken icon */
+        }
+
+        .logo-bg:not([src]),
+        .logo-bg[src=""] {
+            display: none;
+        }
+
+        .content-container {
+            z-index: 10;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body class="loaded">
+    <!-- Initial Flash Effect Overlay -->
+    <div id="flash-overlay"></div>
+
+    <!-- AI Neural Network Background Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Branding Logo Background -->
+    <img src="WhatsApp Image 2026-04-15 at 10.51.22 PM.jpeg" alt="Smart CrackEye Logo" class="logo-bg">
+
+
+    <!-- Main Content Layer -->
+    <main class="content-container">
+        <h1 class="main-title">SMART CRACKEYE SYSTEM</h1>
+        <p class="subtitle">AI-Based Infrastructure Damage Detection</p>
+        <button class="cta-button" id="get-started-btn" data-url="{% url 'role' %}">
+            <span class="btn-text">Get Started</span>
+        </button>
+    </main>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+
+</html>

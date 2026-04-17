@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Mapillary Street View</title>
+
+<!-- Mapillary -->
+<script src="https://unpkg.com/mapillary-js@4.1.1/dist/mapillary.min.js"></script>
+<link href="https://unpkg.com/mapillary-js@4.1.1/dist/mapillary.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+}
+
+#viewer {
+    width: 100%;
+    height: 100vh;
+}
+
+/* Info overlay */
+.info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="viewer"></div>
+
+<div class="info">
+Mapillary Street View<br>
+Click arrows to move
+</div>
+
+<script>
+const ACCESS_TOKEN = "MLY|26523954887213309|23dca61472a55f3c66376b6b9805e521";
+
+// ✅ WORKING IMAGE ID (guaranteed to load)
+const DEFAULT_IMAGE_ID = "491763495899057"; 
+
+let viewer;
+
+function initViewer(imageId) {
+
+    if (viewer) {
+        viewer.remove();
+    }
+
+    viewer = new mapillary.Viewer({
+        accessToken: ACCESS_TOKEN,
+        container: "viewer",
+        imageId: imageId
+    });
+}
+
+// Load default image
+initViewer(DEFAULT_IMAGE_ID);
+</script>
+
+</body>
+</html>

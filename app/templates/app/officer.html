@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <title>Authority Dashboard - Smart CrackEye</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Poppins:wght@300;400;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Google Maps API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key="></script>
+
+  <!-- Project CSS -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+  <style>
+    /* Dashboard Specific Layout */
+    body {
+      overflow-y: auto;
+      display: block;
+      padding-top: 60px;
+      /* Space for banner */
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    body.loaded {
+      opacity: 1;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: sticky;
+      top: 20px;
+      /* Adjusted for better alignment */
+      z-index: 100;
+      width: 100%;
+      padding: 0 20px;
+      margin-bottom: 30px;
+    }
+
+    .navbar h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 2px;
+    }
+
+    /* Metrics Bar */
+    .metrics-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      padding: 0 40px 20px 40px;
+    }
+
+    .metric-card {
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .metric-card h4 {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .metric-card .value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      color: var(--accent-blue);
+      text-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    /* Main Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 25px;
+      padding: 0 40px 40px 40px;
+      height: calc(100vh - 250px);
+      min-height: 600px;
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+
+    /* Report List Panel */
+    .report-panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .panel-header h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      color: var(--accent-blue);
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+    }
+
+    .filter-btn {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-sub);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--accent-blue);
+      color: white;
+    }
+
+    .filter-btn.active {
+      background: rgba(0, 243, 255, 0.1);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    /* Report Card */
+    .report-card {
+      padding: 15px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .report-card:hover {
+      background: rgba(0, 243, 255, 0.08);
+      border-color: rgba(0, 243, 255, 0.3);
+      transform: translateX(5px);
+    }
+
+    .report-card.active {
+      background: rgba(0, 243, 255, 0.12);
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+    }
+
+    .report-card strong {
+      display: block;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+
+    /* Map & Detail Panel */
+    .detail-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #map {
+      height: 300px;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 243, 255, 0.2);
+      filter: hue-rotate(180deg) invert(90%) contrast(90%);
+      margin-bottom: 20px;
+    }
+
+    #streetView {
+      height: 250px;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 243, 255, 0.2);
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-sub);
+      font-size: 0.9rem;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .inspection-box {
+      flex: 1;
+      padding: 25px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .info-group h4 {
+      font-family: 'Orbitron', sans-serif;
+      margin-bottom: 10px;
+      color: var(--accent-blue);
+      font-size: 0.9rem;
+    }
+
+    .info-group p {
+      color: var(--text-sub);
+      font-size: 0.95rem;
+    }
+
+    .action-btns {
+      grid-column: span 2;
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    .btn-approve {
+      background: rgba(77, 255, 136, 0.1);
+      color: #4dff88;
+      border-color: rgba(77, 255, 136, 0.3);
+    }
+
+    .btn-approve:hover {
+      background: #4dff88;
+      color: #000;
+      box-shadow: 0 0 20px rgba(77, 255, 136, 0.4);
+    }
+
+    .btn-reject {
+      background: rgba(255, 77, 77, 0.1);
+      color: #ff4d4d;
+      border-color: rgba(255, 77, 77, 0.3);
+    }
+
+    .btn-reject:hover {
+      background: #ff4d4d;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(255, 77, 77, 0.4);
+    }
+
+    /* Severity Colors */
+    .sev-high {
+      color: #ff4d4d;
+    }
+
+    .sev-medium {
+      color: #ffa333;
+    }
+
+    .sev-low {
+      color: #4dff88;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 243, 255, 0.3);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-blue);
+    }
+  </style>
+</head>
+
+<body class="dashboard-page">
+
+  <!-- 🔥 Running AI Banner -->
+  <div class="top-banner">
+    <div class="banner-track">
+      <span>SYSTEM STATUS: ACTIVE • MONITORING 1,248 ASSETS • 14 UNRESOLVED INCIDENTS • AUTHENTICATED AS AUTHORITY •
+      </span>
+      <span>SYSTEM STATUS: ACTIVE • MONITORING 1,248 ASSETS • 14 UNRESOLVED INCIDENTS • AUTHENTICATED AS AUTHORITY •
+      </span>
+    </div>
+  </div>
+
+  <!-- ✅ Background Canvas (Neural Network) -->
+  <canvas id="bg-canvas"></canvas>
+
+  <style>
+    .nav-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 15px 40px;
+      background: rgba(0, 26, 40, 0.45);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(0, 243, 255, 0.3);
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+    }
+  </style>
+
+  <nav class="navbar animate-fade-in" style="animation-delay: 0.1s;">
+    <div class="nav-box">
+      <h2 class="title-gradient" style="margin: 0;">SMART CRACKEYE</h2>
+      <div style="text-align: right;">
+        <span style="color: var(--accent-blue); font-family: 'Orbitron'; font-size: 0.8rem;">OFFICER LOGGED IN</span><br>
+        <span style="color: var(--text-sub); font-size: 0.7rem;">District Infrastructure Division</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Metrics Section -->
+  <div class="metrics-container animate-fade-in" style="animation-delay: 0.3s;">
+    <div class="metric-card glass-panel">
+      <h4>Critical Reports</h4>
+      <div class="value">{{critical}}</div>
+    </div>
+    <div class="metric-card glass-panel">
+      <h4>Pending Reports</h4>
+      <div class="value">{{pending}}</div>
+    </div>
+    <div class="metric-card glass-panel">
+      <h4>Active Reports</h4>
+      <div class="value">{{active}}</div>
+    </div>
+    <div class="metric-card glass-panel">
+      <h4>Resolved</h4>
+      <div class="value">{{resolved}}</div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid animate-fade-in" style="animation-delay: 0.5s;">
+
+    <!-- LEFT: List -->
+    <div class="report-panel glass-panel">
+      <div class="panel-header">
+        <h3>Report Feed</h3>
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="setFilter('pending', this)">Pending</button>
+          <button class="filter-btn" onclick="setFilter('approved', this)">Approved</button>
+          <button class="filter-btn" onclick="setFilter('rejected', this)">Rejected</button>
+        </div>
+      </div>
+      <div class="scroll-area" id="caseList">
+        <!-- Dynamic Content -->
+      </div>
+    </div>
+
+    <!-- RIGHT: Detail -->
+    <div class="detail-panel">
+      <div id="map" class="glass-panel"></div>
+      <div id="streetView" class="glass-panel">AI Visualization / Street View Loading...</div>
+      <div class="inspection-box glass-panel" id="inspectionBox">
+        <div style="grid-column: span 2; text-align: center; padding-top: 40px; color: var(--text-sub);">
+          Select a report from the list to begin inspection
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="{% static 'js/script.js' %}"></script>
+
+  <script>
+    // Dashboard Logic
+    let cases = [];
+
+    async function loadCases() {
+        const res = await fetch("/api/reports/");
+        const data = await res.json();
+
+        cases = data.cases;
+        renderCases();
+    }
+
+    // call on load
+    document.addEventListener("DOMContentLoaded", loadCases);
+    const map = L.map('map').setView([19.5, 73.0], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    let currentFilter = 'pending';
+
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderCases();
+    }
+
+    function renderCases() {
+      const container = document.getElementById("caseList");
+      container.innerHTML = "";
+
+      const filtered = cases.filter(c => c.status === currentFilter);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-sub); font-size: 0.8rem;">No ${currentFilter} reports found.</div>`;
+        return;
+      }
+
+      filtered.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "report-card";
+        div.innerHTML = `
+          <strong>${c.location}</strong>
+          <span class="sev-${c.severity}" style="font-size: 0.8rem; font-weight: 600;">${c.severity.toUpperCase()} PRIORITY</span>
+          <span style="color: var(--text-sub); font-size: 0.75rem; float: right;">${c.timestamp}</span>
+        `;
+        div.onclick = () => selectCase(c, div);
+        container.appendChild(div);
+      });
+    }
+    function viewPDF(id) {
+    window.open(`/reports/pdf/${id}/`, "_blank");
+}
+
+    function selectCase(c, element) {
+      // Highlight active card
+      document.querySelectorAll('.report-card').forEach(el => el.classList.remove('active'));
+      element.classList.add('active');
+
+      // Update Map
+      map.setView([c.lat, c.lng], 13);
+      L.circleMarker([c.lat, c.lng], { radius: 10, color: '#00f3ff', fillColor: '#00f3ff', fillOpacity: 0.4 }).addTo(map);
+
+      // Update Details
+      const box = document.getElementById("inspectionBox");
+      box.innerHTML = `
+            <div class="info-group">
+                <h4>LOCATION</h4>
+                <p>${c.location}</p>
+                <p style="font-size: 0.8rem; margin-top: 5px;">Coords: ${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}</p>
+            </div>
+            <div class="info-group">
+                <h4>DATA ANALYSIS</h4>
+                <p><strong>Severity:</strong> <span class="sev-${c.severity}">${c.severity.toUpperCase()}</span></p>
+                <p><strong>Reported:</strong> ${c.timestamp}</p>
+            </div>
+            <div class="info-group" style="grid-column: span 2;">
+                <h4>DESCRIPTION</h4>
+                <p>${c.description}</p>
+            </div>
+            <div class="action-btns">
+                <button class="btn btn-approve" onclick="action('Approved')">Approve</button>
+                <button class="btn btn-reject" onclick="action('Rejected')">Reject / Re-inspect</button>
+                <!-- ✅ NEW BUTTON -->
+                <button class="btn btn-view" onclick="viewPDF(${c.id})">
+                    View Report PDF
+                </button>
+            </div>
+        `;
+
+      showStreetView(c.lat, c.lng);
+    }
+
+    let panorama = null;
+    function showStreetView(lat, lng) {
+      const svElem = document.getElementById("streetView");
+      if (!window.google || !google.maps) {
+        svElem.innerText = "Street View API Key Required";
+        return;
+      }
+      const position = { lat: lat, lng: lng };
+      if (!panorama) {
+        panorama = new google.maps.StreetViewPanorama(svElem, { position: position, pov: { heading: 34, pitch: 10 }, zoom: 1 });
+      } else {
+        panorama.setPosition(position);
+      }
+    }
+
+    function action(type) {
+      const activeReport = cases.find(c => {
+        const box = document.getElementById("inspectionBox");
+        return box.innerHTML.includes(c.location);
+      });
+
+      if (activeReport) {
+        activeReport.status = type.toLowerCase() === 'approved' ? 'approved' : 'rejected';
+        showToast(`Report ${type} Successfully`);
+        renderCases(); // Refresh feed
+        document.getElementById("inspectionBox").innerHTML = `
+                <div style="grid-column: span 2; text-align: center; padding-top: 40px; color: var(--text-sub);">
+                    Report ${type}. Select another report from the list.
+                </div>
+            `;
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.createElement("div");
+      toast.className = "glass-panel";
+      toast.style.position = "fixed";
+      toast.style.bottom = "30px";
+      toast.style.right = "30px";
+      toast.style.padding = "15px 25px";
+      toast.style.color = "var(--accent-blue)";
+      toast.style.zIndex = "2000";
+      toast.style.fontFamily = "Orbitron";
+      toast.style.border = "1px solid var(--accent-blue)";
+      toast.innerText = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    window.onload = () => {
+      document.body.classList.add('loaded');
+      renderCases();
+    };
+  </script>
+
+</body>
+
+</html>
